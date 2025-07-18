@@ -25,79 +25,99 @@ interface IJsonResult<TData> {
 
 export default function Home() {
   const [advocates, setAdvocates] = useState<IAdvocate[]>([]);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState<string>("");
+  const [apiLoading, setApiLoading] = useState<boolean>(false);
 
   useEffect(() => {
     (async () => {
       console.log("fetching advocates...");
+      setApiLoading(true);
       const response = await fetch(`/api/advocates?searchTerm=${searchTerm}`);
       const responseJson: IJsonResult<IAdvocate> = await response.json();
       setAdvocates(responseJson.data);
+      setApiLoading(false);
     })();
   }, [searchTerm]);
 
   const onChange = (e: ChangeEvent<HTMLInputElement>) => {
     const searchTerm = e.target.value;
     setSearchTerm(searchTerm);
-
-    const searchTermElement = document.getElementById("search-term");
-    if (searchTermElement) {
-        searchTermElement.innerHTML = searchTerm;
-    } else {
-      console.error("search-term element not found");
-    }
   };
 
   const onClick = () => {
     console.log(advocates);
     setSearchTerm("");
+    document.getElementById("search-input")?.focus();
   };
 
   return (
-    <main style={{ margin: "24px" }}>
-      <h1>Solace Advocates</h1>
-      <br />
-      <br />
+    <main style={{margin: "24px"}}>
+      <h1 className="mb-5">Solace Advocates</h1>
       <div>
-        <p>Search</p>
-        <p>
-          Searching for: <span id="search-term"></span>
-        </p>
-        <input style={{ border: "1px solid black" }} onChange={onChange} />
-        <button onClick={onClick}>Reset Search</button>
+        <fieldset className="fieldset bg-base-200 border-base-300 rounded-box w-xs border p-4">
+          <label className="input">
+            <i className={apiLoading ? "fa-solid fa-spinner fa-spin" : "fa-solid fa-magnifying-glass opacity-50"} />
+            <input
+              id="search-input"
+              type="text"
+              placeholder="Search for an advocate..."
+              onChange={onChange}
+              value={searchTerm}
+            />
+            <button
+              className="btn btn-circle btn-ghost btn-xs"
+              onClick={onClick}
+            >
+              <i className="fa-solid fa-circle-xmark opacity-50"></i>
+            </button>
+          </label>
+        </fieldset>
       </div>
-      <br />
-      <br />
-      <table>
-        <thead><tr>
-          <th>First Name</th>
-          <th>Last Name</th>
-          <th>City</th>
-          <th>Degree</th>
-          <th>Specialties</th>
-          <th>Years of Experience</th>
-          <th>Phone Number</th></tr>
-        </thead>
-        <tbody>
-          {advocates.map((advocate: IAdvocate) => {
-            return (
-              <tr key={advocate.id}>
-                <td>{advocate.firstName}</td>
-                <td>{advocate.lastName}</td>
-                <td>{advocate.city}</td>
-                <td>{advocate.degree}</td>
-                <td>
-                  {advocate.specialties.map((s) => (
-                    <div key={`${advocate.id}{s}`}>{s}</div>
-                  ))}
-                </td>
-                <td>{advocate.yearsOfExperience}</td>
-                <td>{advocate.phoneNumber}</td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
+
+      <div className="mt-2 overflow-x-auto rounded-box border border-gray-700 bg-base-100">
+        <table className="table">
+          <thead>
+            <tr>
+              <th>First Name</th>
+              <th>Last Name</th>
+              <th>City</th>
+              <th>Degree</th>
+              <th>Specialties</th>
+              <th>Years of Experience</th>
+              <th>Phone Number</th>
+            </tr>
+          </thead>
+          <tbody>
+            {advocates.map((advocate: IAdvocate) => {
+              return (
+                <tr key={advocate.id}>
+                  <td>{advocate.firstName}</td>
+                  <td>{advocate.lastName}</td>
+                  <td>{advocate.city}</td>
+                  <td>{advocate.degree}</td>
+                  <td>
+                    <ul className="list-disc">
+                      {advocate.specialties.map((s) => (
+                        <li key={`${advocate.id}{s}`}>{s}</li>
+                      ))}
+                    </ul>
+                  </td>
+                  <td>{advocate.yearsOfExperience}</td>
+                  <td>
+                    <i className="fa-solid fa-phone mr-2"></i>
+                    <a
+                      className="link"
+                      href={"tel:" + advocate.phoneNumber}
+                    >
+                      {advocate.phoneNumber}
+                    </a>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
     </main>
-  );
+);
 }
