@@ -32,10 +32,13 @@ export default function Home() {
     (async () => {
       console.log("fetching advocates...");
       setApiLoading(true);
-      const response = await fetch(`/api/advocates?searchTerm=${searchTerm}`);
-      const responseJson: IJsonResult<IAdvocate> = await response.json();
-      setAdvocates(responseJson.data);
-      setApiLoading(false);
+      try {
+        const response = await fetch(`/api/advocates?searchTerm=${searchTerm}`);
+        const responseJson: IJsonResult<IAdvocate> = await response.json();
+        setAdvocates(responseJson.data);
+      } finally {
+        setApiLoading(false);
+      }
     })();
   }, [searchTerm]);
 
