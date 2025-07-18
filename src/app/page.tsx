@@ -1,44 +1,56 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import {ChangeEvent, useEffect, useState} from "react";
+
+/**
+ * Advocate model returned from the API request. Ideally, this would be auto-generated.
+ */
+interface IAdvocate {
+  id: number;
+  firstName: string;
+  lastName: string;
+  city: string;
+  degree: string;
+  specialties: string[];
+  yearsOfExperience: number;
+  phoneNumber: number;
+}
+
+/**
+ * Represents a typed JSON response. Makes it easier to deserialize.
+ */
+interface IJsonResult<TData> {
+  data: TData[];
+}
 
 export default function Home() {
-  const [advocates, setAdvocates] = useState([]);
-  const [filteredAdvocates, setFilteredAdvocates] = useState([]);
+  const [advocates, setAdvocates] = useState<IAdvocate[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
-    console.log("fetching advocates...");
-    fetch("/api/advocates").then((response) => {
-      response.json().then((jsonResponse) => {
-        setAdvocates(jsonResponse.data);
-        setFilteredAdvocates(jsonResponse.data);
-      });
-    });
-  }, []);
+    (async () => {
+      console.log("fetching advocates...");
+      const response = await fetch(`/api/advocates?searchTerm=${searchTerm}`);
+      const responseJson: IJsonResult<IAdvocate> = await response.json();
+      setAdvocates(responseJson.data);
+    })();
+  }, [searchTerm]);
 
-  const onChange = (e) => {
+  const onChange = (e: ChangeEvent<HTMLInputElement>) => {
     const searchTerm = e.target.value;
+    setSearchTerm(searchTerm);
 
-    document.getElementById("search-term").innerHTML = searchTerm;
-
-    console.log("filtering advocates...");
-    const filteredAdvocates = advocates.filter((advocate) => {
-      return (
-        advocate.firstName.includes(searchTerm) ||
-        advocate.lastName.includes(searchTerm) ||
-        advocate.city.includes(searchTerm) ||
-        advocate.degree.includes(searchTerm) ||
-        advocate.specialties.includes(searchTerm) ||
-        advocate.yearsOfExperience.includes(searchTerm)
-      );
-    });
-
-    setFilteredAdvocates(filteredAdvocates);
+    const searchTermElement = document.getElementById("search-term");
+    if (searchTermElement) {
+        searchTermElement.innerHTML = searchTerm;
+    } else {
+      console.error("search-term element not found");
+    }
   };
 
   const onClick = () => {
     console.log(advocates);
-    setFilteredAdvocates(advocates);
+    setSearchTerm("");
   };
 
   return (
@@ -57,26 +69,26 @@ export default function Home() {
       <br />
       <br />
       <table>
-        <thead>
+        <thead><tr>
           <th>First Name</th>
           <th>Last Name</th>
           <th>City</th>
           <th>Degree</th>
           <th>Specialties</th>
           <th>Years of Experience</th>
-          <th>Phone Number</th>
+          <th>Phone Number</th></tr>
         </thead>
         <tbody>
-          {filteredAdvocates.map((advocate) => {
+          {advocates.map((advocate: IAdvocate) => {
             return (
-              <tr>
+              <tr key={advocate.id}>
                 <td>{advocate.firstName}</td>
                 <td>{advocate.lastName}</td>
                 <td>{advocate.city}</td>
                 <td>{advocate.degree}</td>
                 <td>
                   {advocate.specialties.map((s) => (
-                    <div>{s}</div>
+                    <div key={`${advocate.id}{s}`}>{s}</div>
                   ))}
                 </td>
                 <td>{advocate.yearsOfExperience}</td>
